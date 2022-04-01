@@ -16,7 +16,7 @@ public class MessageConstructor {
     LiveTimingInfo liveTimingInfo = liveTimingOptional.get();
     return Optional.of(liveTimingInfo.getRaceName().concat("\n\n")
         .concat(liveTimingInfo.getLapStatus()).concat("\n\n")
-        .concat("P. Driver Time(Gap) Stops")
+        .concat("P. Driver Time(Gap) Stops").concat("\n\n")
         .concat(liveTimingInfo.getDriverInfo().stream()
             .map(MessageConstructor::processDriverData)
             .collect(Collectors.joining("\n"))));
