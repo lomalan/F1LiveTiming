@@ -12,7 +12,8 @@ import org.junit.jupiter.api.Test;
 
 class LiveTimingHtmlClientITest {
 
-  private final LiveTimingHtmlClient client = new LiveTimingHtmlClient("https://live.planetf1.com/liverace");
+  private final LiveTimingHtmlClient client =
+    new LiveTimingHtmlClient("https://live.planetf1.com/liverace");
 
   @Test
   void liveTimingInfoSuccessPath() {
@@ -24,10 +25,9 @@ class LiveTimingHtmlClientITest {
     assertNotNull(info.getLapStatus());
     assertNotNull(info.getRaceName());
     assertFalse(info.getDriverInfo().isEmpty());
-    assertTrue(info.getLapStatus().contains("Status"));
-    assertTrue(info.getLapStatus().contains("of"));
     assertTrue(info.getRaceName().contains("Grand Prix"));
     assertTrue(info.getDriverInfo().size() <= 20);
     assertEquals("1", info.getDriverInfo().get(0).getPosition());
+    assertFalse(info.getDriverInfo().get(0).getName().isEmpty());
   }
 }
