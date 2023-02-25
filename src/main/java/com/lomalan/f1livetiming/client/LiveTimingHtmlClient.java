@@ -43,15 +43,27 @@ public class LiveTimingHtmlClient {
       setupWebClient(webClient);
       HtmlPage page = webClient.getPage(liveTimingUrl);
       webClient.waitForBackgroundJavaScriptStartingBefore(10000);
-      Pair<String, String> raceNameAndStatus = getRaceNameAndStatus(page);
-      List<DriverInfo> driverInfoTwos = getDriversInfo(page);
-      return Optional
-          .of(new LiveTimingInfo(raceNameAndStatus.getLeft(), raceNameAndStatus.getRight(), driverInfoTwos));
+      LiveTimingInfo liveTimingInfo = createLiveTimingInfo(page);
+      log.info("Live timing info data: {}", liveTimingInfo);
+      return Optional.of(liveTimingInfo);
     } catch (IOException exc) {
       log.error(exc.getMessage());
     }
-
     return Optional.empty();
+  }
+
+  private LiveTimingInfo createLiveTimingInfo(HtmlPage page) {
+    Pair<String, String> raceAndCircuit = getRaceAndCircuitName(page);
+    List<DriverInfo> driversInfo = getDriversInfo(page);
+    return new LiveTimingInfo(raceAndCircuit.getLeft(), raceAndCircuit.getRight(), driversInfo);
+  }
+  private Pair<String, String> getRaceAndCircuitName(HtmlPage page) {
+    Iterator<DomElement> iterator = getIteratorFromXPath(page.getByXPath(RACE_DATA_SECTION_NAME));
+    //skipping first three elements
+    iterator.next();iterator.next();iterator.next();
+    String raceName = iterator.next().asNormalizedText();
+    String circuitName = iterator.next().asNormalizedText();
+    return Pair.of(raceName, circuitName);
   }
 
   private List<DriverInfo> getDriversInfo(HtmlPage page) {
@@ -75,21 +87,12 @@ public class LiveTimingHtmlClient {
     webClient.getOptions().setCssEnabled(false);
   }
 
-  private Pair<String, String> getRaceNameAndStatus(HtmlPage page) {
-    Iterator<DomElement> iterator = getIteratorFromXPath(page.getByXPath(RACE_DATA_SECTION_NAME));
-    //skipping first three elements
-    iterator.next();iterator.next();iterator.next();
-    String raceName = iterator.next().asNormalizedText();
-    String circuitName = iterator.next().asNormalizedText();
-    return Pair.of(raceName, circuitName);
-  }
-
   private DriverInfo mapToDriverInfo(HtmlTableRow row) {
     if (row.getCells().get(0).asNormalizedText().equalsIgnoreCase("POS")) {
       return null;
     }
     return new DriverInfo(row.getCells().get(0).asNormalizedText(),
-        getDriverName(row.getCells().get(1).asNormalizedText()),
+        getDriverName(row.getCells().get(2).asNormalizedText()),
         row.getCells().get(3).asNormalizedText(),
         row.getCells().get(4).asNormalizedText());
   }
