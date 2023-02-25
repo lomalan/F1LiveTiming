@@ -49,6 +49,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>f1livetiming</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

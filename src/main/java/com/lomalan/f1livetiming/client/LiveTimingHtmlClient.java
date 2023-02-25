@@ -1,21 +1,22 @@
 package com.lomalan.f1livetiming.client;
 
+import com.gargoylesoftware.htmlunit.html.DomElement;
+import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.DRIVERS_INFO_SECTION_NAME;
-import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.RACE_NAME_SECTION_NAME;
-import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.RACE_STATUS_SECTION_NAME;
+import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.RACE_DATA_SECTION_NAME;
 import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.SCHUMACHER_SHORT_NAME;
 import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.SCHUMACHER_SHORT_NAME_REPLACEMENT;
 
 import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlSpan;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
 import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
 import com.gargoylesoftware.htmlunit.javascript.SilentJavaScriptErrorListener;
 import com.lomalan.f1livetiming.model.DriverInfo;
 import com.lomalan.f1livetiming.model.LiveTimingInfo;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -54,7 +55,7 @@ public class LiveTimingHtmlClient {
   }
 
   private List<DriverInfo> getDriversInfo(HtmlPage page) {
-    HtmlTable driversTable = page.getHtmlElementById(DRIVERS_INFO_SECTION_NAME);
+    HtmlTable driversTable = getTableFromXPath(page.getByXPath(DRIVERS_INFO_SECTION_NAME));
 
     return driversTable.getRows().stream()
         .map(this::mapToDriverInfo)
@@ -75,18 +76,16 @@ public class LiveTimingHtmlClient {
   }
 
   private Pair<String, String> getRaceNameAndStatus(HtmlPage page) {
-    String raceName = page.getHtmlElementById(RACE_NAME_SECTION_NAME).asNormalizedText();
-    List<Object> byXPath = page.getByXPath(RACE_STATUS_SECTION_NAME);
-    if (byXPath.isEmpty()) {
-      return Pair.of(raceName, StringUtils.EMPTY);
-    }
-    HtmlSpan htmlSpan = (HtmlSpan) byXPath.get(0);
-    String raceStatus = htmlSpan.getChildElements().iterator().next().asNormalizedText();
-    return Pair.of(raceName, raceStatus);
+    Iterator<DomElement> iterator = getIteratorFromXPath(page.getByXPath(RACE_DATA_SECTION_NAME));
+    //skipping first three elements
+    iterator.next();iterator.next();iterator.next();
+    String raceName = iterator.next().asNormalizedText();
+    String circuitName = iterator.next().asNormalizedText();
+    return Pair.of(raceName, circuitName);
   }
 
   private DriverInfo mapToDriverInfo(HtmlTableRow row) {
-    if (row.getCells().get(0).asNormalizedText().equals("POS")) {
+    if (row.getCells().get(0).asNormalizedText().equalsIgnoreCase("POS")) {
       return null;
     }
     return new DriverInfo(row.getCells().get(0).asNormalizedText(),
@@ -108,5 +107,15 @@ public class LiveTimingHtmlClient {
       return SCHUMACHER_SHORT_NAME_REPLACEMENT;
     }
     return shortName;
+  }
+
+  private Iterator<DomElement> getIteratorFromXPath(List<Object> byXPath) {
+    HtmlDivision htmlSpan = (HtmlDivision) byXPath.get(0);
+    return htmlSpan.getChildElements().iterator();
+  }
+
+  private HtmlTable getTableFromXPath(List<Object> byXPath) {
+    HtmlDivision htmlDivision = (HtmlDivision) byXPath.get(0);
+    return (HtmlTable) htmlDivision.getChildElements().iterator().next();
   }
 }
