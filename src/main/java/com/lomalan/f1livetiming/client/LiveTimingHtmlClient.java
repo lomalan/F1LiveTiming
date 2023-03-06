@@ -4,8 +4,6 @@ import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.DRIVERS_INFO_SECTION_NAME;
 import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.RACE_DATA_SECTION_NAME;
-import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.SCHUMACHER_SHORT_NAME;
-import static com.lomalan.f1livetiming.client.html.LiveTimingVariableStorage.SCHUMACHER_SHORT_NAME_REPLACEMENT;
 
 import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -104,12 +102,11 @@ public class LiveTimingHtmlClient {
     return stringValue;
   }
 
-  private String getDriverShortName(String stringValue) {
-    String shortName = stringValue.split(StringUtils.SPACE)[1].substring(0, 3).toUpperCase(Locale.ROOT);
-    if (shortName.equals(SCHUMACHER_SHORT_NAME)) {
-      return SCHUMACHER_SHORT_NAME_REPLACEMENT;
-    }
-    return shortName;
+
+  private static String getDriverShortName(String stringValue) {
+    return stringValue.substring(stringValue.indexOf(' ') + 1)
+      .replace(" ", "")
+      .substring(0, 3).toUpperCase(Locale.ROOT);
   }
 
   private Iterator<DomElement> getIteratorFromXPath(List<Object> byXPath) {
